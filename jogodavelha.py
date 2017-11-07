@@ -1,55 +1,118 @@
-import jogos
+import jogo
 
 
 class Estado(object):
+    """
+    Implementacao de um estado no ambiente do jogo da velha
+    """
 
-	def __init__(self, jogador, utilidade, tabuleiro, acoes):
-		self.jogador = jogador
-		self.utilidade = utilidade
-		self.tabuleiro = tabuleiro
-		self.acoes = acoes
+    def __init__(self, jogador, utilidade, tabuleiro, acoes):
+        self.jogador = jogador
+        self.utilidade = utilidade
+        self.tabuleiro = tabuleiro
+        self.acoes = acoes
 
 
-class JogoDaVelha(jogos.Jogo):
+class JogoDaVelha(jogo.Jogo):
+    """
+    Implementacao da interface "Jogo"
+    """
 
-	def acoes(self, estado):
-		"""
-		Acoes validas sao quaisquer quadrados ainda nao marcados
-		"""
-		return estado.acoes
+    def __init__(self, estado_inicial):
+        self.estado_inicial = estado_inicial
+        self.h=3
+        self.v=3
+        self.k=3
 
-	def resultado(self, acao, estado):
-		"""
-        Retorna o estado resultante de uma acao aplicada a um estado
+    def acoes(self, estado):
         """
-		# Uma acao invalida nao surte nenhum efeito
-		if acao not in estado.acoes:
+        Movimentos permitidos sao os quadrados que ainda nao foram marcados
+        @param estado: estado atual do ambiente
+        @return: movimentos que o jogador pode realizar
+        """
+        return estado.acoes
 
-			return estado
+    def resultado(self, acao, estado):
+        """
+        Aplica uma acao a um estado e retorna o estado resultante
+        @param acao: uma acao
+        @param estado: estado atual do ambiente
+        @return: novo estado
+        """
+        # um movimento nao permitido nao surte nenhum efeito
+        if acao not in estado.acoes:
 
-		tabuleiro = estado.tabuleiro.copy()
-		tabuleiro[acao] = estado.jogador
-		acoes = estado.acoes.copy()
-		acoes.remove(acao)
+            return estado
 
-		return Estado(jogador='O' if estado.jogador == 'X' else 'X',
-			utilidade=calcula_utilidade(tabuleiro, acao, estado.jogador),
-			tabuleiro=tabuleiro,
-			acoes=acoes)
+        tabuleiro = estado.tabuleiro.copy()
+        tabuleiro[acao] = estado.jogador
+        acoes = estado.acoes.copy()
+        acoes.remove(acao)
 
-	def utilidade(self, estado, jogador):
-		"""
-		Retorna o valor utilidade para o jogador; 1 se MAX vencer, -1
-		se MIN ganhar e 0 caso contrario
-		"""
-		return estado.utilidade if estado.jogador == 'X' else -estado.utilidade
+        return Estado(jogador='O' if estado.jogador=='X' else 'X',
+                      utilidade=self.calcula_utilidade(tabuleiro, acao, estado.jogador),
+                      tabuleiro=tabuleiro,
+                      acoes=acoes)
 
-	def teste_termino(self, estado):
-		"""
-		Um estado terminal eh aquele onde algum jogador ganhou ou se
-		nao ha mais nenhum quadrado a ser preenchido
-		"""
-		return estado.utilidade != 0 or len(estado.acoes) == 0
+    def utilidade(self, estado, jogador):
+        """
+        Retorna o valor de utilidade para o jogador. 1 para vitoria, -1 para derrota e
+        0 caso contrario.
+        @param estado: estado atual do ambiente
+        @param jogador: um dos jogadores
+        @return: retorna o valor de utilidade do estado para o jogador
+        """
+        return estado.utilidade if jogador=='X' else -estado.utilidade
 
+    def teste_termino(self, estado):
+        """
+        Um estado final e aquele onde ha um vencedor ou onde nao ha quadrados vazios
+        """
+        return estado.utilidade != 0 or len(estado.acoes) == 0
 
-def calcula_utilidade(tabuleiro, acao, jogador):
+    def calcula_utilidade(self, board, move, player):
+        """
+        If 'X' wins with this move, return 1; if 'O' wins return -1; else return 0.
+        """
+        if (self.k_in_row(board, move, player, (0, 1)) or
+                self.k_in_row(board, move, player, (1, 0)) or
+                self.k_in_row(board, move, player, (1, -1)) or
+                self.k_in_row(board, move, player, (1, 1))):
+            return +1 if player == 'X' else -1
+        else:
+            return 0
+
+    def k_in_row(self, board, move, player, delta_x_y):
+        """
+        Return true if there is a line through move on board for player.
+        """
+        (delta_x, delta_y) = delta_x_y
+        x, y = move
+        n = 0  # n is number of moves in row
+        while board.get((x, y)) == player:
+            n += 1
+            x, y = x + delta_x, y + delta_y
+        x, y = move
+        while board.get((x, y)) == player:
+            n += 1
+            x, y = x - delta_x, y - delta_y
+        n -= 1  # Because we counted move itself twice
+        return n >= self.k
+
+    def display(self, tabuleiro):
+        """
+        Exibe o estado na tela
+        """
+        linha = ""
+        
+        for i in range(3):
+            for j in range(3):
+                peca = tabuleiro.get((i, j))
+
+                if not peca is None:
+                    linha += peca
+                else:
+                    linha += "-"
+
+            print(linha)
+            linha = ""

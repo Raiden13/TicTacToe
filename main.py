@@ -1,11 +1,19 @@
+import jogo
 import jogodavelha
 
 
-estado_inicial = jogodavelha.Estado(jogador='X',
-	utilidade=0,
-	tabuleiro={},
-	acoes=[(a, b) for a in range(3) for b in range(3)])
-jogo = jogodavelha.JogoDaVelha()
+# Estado inicial do jogo
+estado_atual = jogodavelha.Estado(jogador='X',
+                                    utilidade=0,
+                                    tabuleiro={},
+                                    acoes=[(i, j) for i in range(3) for j in range(3)])
 
-print(estado_inicial)
-print(jogo.resultado((0, 0), estado_inicial))
+jogo_da_velha = jogodavelha.JogoDaVelha(estado_atual)
+
+
+while not jogo_da_velha.teste_termino(estado_atual):
+    acao = jogo.minimax(estado_atual, jogo_da_velha)
+    estado_atual = jogo_da_velha.resultado(acao, estado_atual)
+    print(":.: ---- :.:")
+    jogo_da_velha.display(estado_atual.tabuleiro)
+    print(":.: ---- :.:")
